@@ -1,0 +1,224 @@
+<script src='../js/jquery-2.1.4/jquery.min.js'></script>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="tablea">
+    <tr>
+        <td align="center">科目</td>
+        <td align="left">
+            <div class="chose chose1"></div>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">难度</td>
+        <td align="left">
+            <div class="chose chose2"></div>
+        </td>
+    </tr>
+     <tr>
+        <td align="center">类型</td>
+        <td align="left">
+            <div class="chose chose3"></div>
+        </td>
+    </tr>
+    <tr>
+        <td align="center">知识点</td>
+        <td align="left">
+            <div class="chose chose4"></div>
+        </td>
+    </tr>
+     
+</table>
+
+
+<script>
+    $(function(){
+      $.getJSON('http://101.132.100.249:3000/exam/manager/getAllDepartmentes',function(data){
+        console.log(data)
+      })
+        //科目
+        $.getJSON('http://101.132.100.249:3000/exam/manager/getAllDepartmentes',function(results){
+            results.forEach(function(item,index){
+                $('.chose1').append("<a href='#' id='"+item.id+"' >"+item.name+"</a>");
+            })
+             $('.chose1').children().eq(0).trigger('click');
+           // console.log(results);
+        });
+         $('.chose1').click(function(event){
+             $('.chose1').children().attr('class','');
+             $(event.target).attr('class','active3');
+             var expartment_id=$(event.target).attr('id');
+             //console.log(expartment_id);
+        }); 
+        //难度
+         $.getJSON('http://101.132.100.249:3000/exam/manager/getAllSubjectLevel',function(results){
+            results.forEach(function(item,index){
+                $('.chose2').append("<a href='#' name='"+item.name+"' id='"+item.id+"' >"+item.realName+"</a>");
+            })
+             $('.chose2').children().eq(0).trigger('click');
+            // console.log(results);
+        });
+         $('.chose2').click(function(event){
+             $('.chose2').children().attr('class','');
+             $(event.target).attr('class','active3');
+             var subjectLevel_id=$(event.target).attr('id');
+             //console.log(subjectLevel_id);
+        });  
+        //类型   
+         $.getJSON('http://101.132.100.249:3000/exam/manager/getAllSubjectType',function(results){
+            results.forEach(function(item,index){
+                $('.chose3').append("<a href='#' name='"+item.name+"' realName='"+item.realName+"' id='"+item.id+"' >"+item.realName+"</a>");
+            })
+             $('.chose3').children().eq(0).trigger('click');
+            // console.log(results);
+        });
+         $('.chose3').click(function(event){
+             $('.chose3').children().attr('class','');
+             $(event.target).attr('class','active3');
+             var subjectType_id=$(event.target).attr('id');
+             //console.log(subjectType_id);
+        });  
+        //知识点
+        $.getJSON('http://101.132.100.249:3000/exam/manager/getAllTopics',function(results){
+            results.forEach(function(item,index){
+                $('.chose4').append("<a href='#' department_id='"+item.department_id+"' id='"+item.id+"' >"+item.title+"</a>");
+            })
+                $('.chose4').children().eq(0).trigger('click');
+            //console.log(results);
+        });
+         $('.chose4').click(function(event){
+             $('.chose4').children().attr('class','');
+             $(event.target).attr('class','active3');
+            //  var topic_id=$(event.target).attr('department_id');
+            //  console.log(topic_id);
+        });  
+        
+        $('table').click(function(){
+          var ids=$('table tr td .chose a.active3').get();
+          var department_id='';
+          var subjectLevel_id='';
+          var subjectType_id='';
+          var topic_id='';
+          if(ids.length==4){
+              ids.forEach(function(item,index){
+                switch(index){
+                    case 0:department_id=item.id;
+                        break;
+                    case 1:subjectLevel_id=item.id
+                        break;
+                    case 2:subjectType_id=item.id
+                        break;
+                    case 3:topic_id=item.id
+                        break;
+                }      
+              })
+              //获取到题目
+        $.ajax({
+            url:'http://101.132.100.249:3000/exam/manager/getAllSubjects',
+            method:'post',
+            data:{
+                'subject.department_id':department_id,
+                'subject.subjectLevel_id':subjectLevel_id,
+                'subject.subjectType_id':subjectType_id,
+                'subject.topic_id':topic_id
+            },
+            success:function(data){
+                $(".Catalogtitle").find("em").html(data.length);
+                 //在添加之前首先将页面进行清空
+                $(".Catalog_rightnei:not(:hidden)").remove();
+                var joinDiv='';
+                data.forEach(function(item,index){
+                  // console.log(item);
+                    var div=$('.Catalog_rightnei').eq(0).clone();
+                    joinDiv=$('.joinTest').clone(true);
+                   // var div3=$('.Catalog_rightnei').eq(1).clone();
+                    div.removeAttr('hidden');
+                    div.find('.Catalogcontentup').html("<span id='"+item.id+"'>"+item.stem+"</span>");
+                    //div3.find('.Catalogcontentup').html(item.stem)
+                    var div2=$("<div style='color:red'  hidden class='answer'></div>");
+                    div2.html("答案: "+item.answer+"</br>解析:"+item.analysis);
+                    div.find('.Catalogcontentup').append(div2);  
+                    //var div4=$("<div style='color:red'  class='answer2'></div>");
+                    //div3.find('.Catalogcontentup').append(div4); 
+                    div.find('.Catalogcontentup').append(div2);  
+                    if(item.subjectType_id==3){ 
+                        $('.Catalog_right').append(div); 
+                        // $('.Catalog_right').append(div3); 
+                    }else{
+                        div.find('.Catalogcontentup').append("<ol type='A' style='margin-left:20px'></ol>");
+                        $.getJSON('/exam/manager/getAllChoices?id='+item.id,function(results){
+                          // console.log(results);
+                             results.forEach(function(item,index){
+                              console.log(item);
+                                if(item.correct.data[0]==1){
+                                    div.find('.Catalogcontentup ol').append("<li style='color:red'>"+item.content+"</li>")
+                                }else{
+                                    div.find('.Catalogcontentup ol').append("<li>"+item.content+"</li>")
+                                }
+                             })
+                        })
+                        $('.Catalog_right').append(div);    
+                    }    
+                }) 
+                //
+                $(".dddd").click(function(event){
+                  var id=$(event.target).parent().siblings('.Catalogcontentup').children('span').attr('id');
+                  // alert(id)
+                  $.ajax({
+                    url:'http://101.132.100.249:3000/exam/manager/batchDeleteSubject',
+                    data:{
+                      id:id
+                    },
+                    type:'post',
+                    success:function(){
+                        
+                    }
+                  })
+                })
+                //点击审核通过按钮
+                $(".aaaa").click(function(event){
+                    $('.checkTest').show();
+                    $(event.target).parent().hide();
+                    $($(event.target).parent()).parent().append($('.joinTest'));
+                    //获取题目的id
+                    var id=$(event.target).parent().siblings('.Catalogcontentup').children('span').attr('id');
+                    console.log(id);
+                    $.ajax({
+                        url:'http://101.132.100.249:3000/exam/manager/checkSubject',
+                        data:{
+                            id:id,
+                            subjectState:'审核通过'
+                        },
+                        method:'post',
+                    })
+                })  
+                //点击审核不通过按钮
+                $(".cccc").click(function(event){
+                    $('.checkTest').show();
+                    $(event.target).parent().hide();
+                    $($(event.target).parent()).parent().append($('.joinTest'));
+                    //获取题目的id
+                    var id=$(event.target).parent().siblings('.Catalogcontentup').children('span').attr('id');
+                    console.log(id);
+                    $.ajax({
+                        url:'http://101.132.100.249:3000/exam/manager/checkSubject',
+                        data:{
+                            id:id,
+                            subjectState:'审核不通过'
+                        },
+                        method:'post',
+                    })
+                })    
+            }
+        })
+
+     }
+})
+    //点击ｉｎｐｕｔ框显示答案和解析
+     $('.Catalogtitle :checkbox').click(function(){   
+                    if($('input[type=checkbox]').is(':checked')){
+                        $('.answer').show()
+                    }else{
+                        $('.answer').hide();
+                    }
+                })
+      
+    })
+</script>
